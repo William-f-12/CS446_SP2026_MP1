@@ -303,7 +303,7 @@ def test_matmul_matrix():
 def test_matmul_matvec():
     # Case: matrix @ vector (2D x 1D)
     a0 = np.random.randn(3,4)
-    b0 = np.random.randn(4)
+    b0 = np.random.randn(4) 
     _check_grad_binary(lambda a,b: MatMul.apply(a,b), lambda a,b: a@b, a0, b0, "MatMul-matvec")
 
 

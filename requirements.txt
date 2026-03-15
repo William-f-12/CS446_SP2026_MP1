@@ -1,0 +1,10 @@
+# MP1 (mini_torch) dependencies
+# Python: 3.10+
+
+# Necessary
+numpy==2.2.0
+pytest==9.0.2
+
+# Recommended (optional, for temporary cross-framework validation only)
+# Remove all torch usage before final submission per README.
+torch>=2.2,<3
