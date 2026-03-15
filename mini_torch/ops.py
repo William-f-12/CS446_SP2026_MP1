@@ -269,7 +269,7 @@ class Neg(Function):
             Tuple[np.ndarray]:
                 Gradient with respect to input x, with the same shape as x.
         """
-        x_shape = ctx.saved_values
+        (x_shape,) = ctx.saved_values
         return Function.reduce_shape(-grad_out, x_shape)
 
 
@@ -404,7 +404,7 @@ class Mean(Function):
             Tuple[np.ndarray]:
                 Gradient with respect to input x, with the same shape as x.
         """
-        x_shape = ctx.saved_values
+        (x_shape,) = ctx.saved_values
         x_size = np.prod(x_shape)
         return (np.ones(x_shape, dtype=np.float32) * grad_out / x_size,)
 
