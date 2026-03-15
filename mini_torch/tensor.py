@@ -122,7 +122,7 @@ class Tensor:
             - Clear each non-leaf tensor's `grad_fn` pointer.
             - Clear the `Function` node's `parents` list.
             - Clear any saved objects in `ctx` (e.g., `saved_tensors`) and drop `ctx` itself.
-        TODO:
+
         1. Collect all reachable tensors in topological order via `grad_fn.parents`.
         2. Initialize the upstream gradient for `self` as `1`.
         3. Traverse in reverse order: propagate gradients through `grad_fn.backward(...)` and accumulate into parents (leaves into `.grad`).
@@ -134,6 +134,66 @@ class Tensor:
         if self.data.size != 1:
             raise ValueError("backward() can only be called on a scalar Tensor.")
 
-            
-        raise NotImplementedError
+        topo: List[Tensor] = []
+        visited: Set[int] = set()
+
+        def build_topo(t: "Tensor") -> None:
+            tid = id(t)
+            if tid in visited:
+                return
+            visited.add(tid)
+
+            if t.grad_fn is not None:
+                for p in t.grad_fn.parents:
+                    build_topo(p)
+
+            topo.append(t)
+
+        build_topo(self)
+
+        grads: dict[Tensor, np.ndarray] = {
+            self: np.ones_like(self.data, dtype=np.float32)
+        }
+
+        for t in reversed(topo):
+            grad_out = grads.get(t)
+            if grad_out is None:
+                continue
+
+            grad_out = np.array(grad_out, dtype=np.float32)
+
+            if t.grad_fn is None: # Leaf tensor (input)
+                if t.requires_grad:
+                    if t.grad is None:
+                        t.grad = grad_out
+                    else:
+                        t.grad = np.array(t.grad + grad_out, dtype=np.float32)
+                continue
+
+            fn = t.grad_fn
+            parent_grads = fn.backward(fn.ctx, grad_out)
+
+            for p, gp in zip(fn.parents, parent_grads):
+                if gp is None or not p.requires_grad:
+                    continue
+
+                gp = np.array(gp, dtype=np.float32)
+                if p in grads:
+                    grads[p] = np.array(grads[p] + gp, dtype=np.float32)
+                else:
+                    grads[p] = gp
+
+        # Free graph by default after backward.
+        for t in topo:
+            if t.grad_fn is None:
+                continue
+
+            fn = t.grad_fn
+            if fn.ctx is not None:
+                fn.ctx.saved_tensors = ()
+                fn.ctx.saved_values = ()
+
+            fn.parents = ()
+            fn.ctx = None
+            t.grad_fn = None
 
