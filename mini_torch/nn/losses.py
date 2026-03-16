@@ -1,15 +1,21 @@
 import numpy as np
-from .module import Module
-from ..tensor import Tensor
+
 from ..ops import CrossEntropy
+from ..tensor import Tensor
+from .module import Module
+
 
 # The implementation of CrossEntropyLoss is provided for reference.
 class CrossEntropyLoss(Module):
     def forward(self, pred: Tensor, target) -> Tensor:
-        target_t = target if isinstance(target, Tensor) else Tensor(np.asarray(target), requires_grad=False)
+        target_t = (
+            target
+            if isinstance(target, Tensor)
+            else Tensor(np.asarray(target), requires_grad=False)
+        )
         return CrossEntropy.apply(pred, target_t)
-    
-    
+
+
 """
 Example usage:
     >>> loss_fn = MSELoss()  // Create an instance of the MSELoss module
@@ -19,6 +25,8 @@ Example usage:
     >>> loss = loss_fn(pred, target)
     >>> loss.backward()
 """
+
+
 class MSELoss(Module):
     def forward(self, pred: Tensor, target) -> Tensor:
         """
@@ -35,9 +43,11 @@ class MSELoss(Module):
         Returns:
             Tensor:
                 A scalar Tensor containing the mean squared error.
-                
+
         Note:
             - Does not modify `pred` or `target` in-place.
         """
-        #TODO: implement MSE loss
-        raise NotImplementedError
+        if not isinstance(target, Tensor):
+            target = Tensor(np.asarray(target), requires_grad=False)
+        diff = pred - target
+        return (diff**2).mean()

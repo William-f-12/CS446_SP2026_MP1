@@ -1,6 +1,7 @@
 import numpy as np
-from .module import Module
+
 from ..tensor import Tensor
+from .module import Module
 
 """
 Example usage:
@@ -9,6 +10,8 @@ Example usage:
     //This will call the forward method of Linear, and compute the output tensor of shape (batch_size, 256) using tensor operations(like @, +, ...).
     >>> out = lin_layer(x)
 """
+
+
 class Linear(Module):
     """
     A fully connected (affine) layer.
@@ -36,9 +39,16 @@ class Linear(Module):
         """
         super().__init__()
 
-        # TODO: define weight parameter as a member of this class instance (E.g., self.weights). It will be used in forward()
-        # TODO: define bias parameter as a member of this class instance (E.g., self.bias) (if bias=True). It will be used in forward()
-        raise NotImplementedError
+        # define weight parameter as a member of this class instance (E.g., self.weights). It will be used in forward()
+        self.weights = Tensor(
+            np.random.randn(in_features, out_features), requires_grad=True
+        )
+
+        # define bias parameter as a member of this class instance (E.g., self.bias) (if bias=True). It will be used in forward()
+        if bias:
+            self.bias = Tensor(np.zeros(out_features), requires_grad=True)
+        else:
+            self.bias = None
 
     def forward(self, x: Tensor) -> Tensor:
         """
@@ -55,5 +65,9 @@ class Linear(Module):
         Note:
             - Does not modify the input tensor, the weight and the bias in-place.
         """
-        #TODO: - Compute the output of the linear layer using the input tensor, parameters(the weight and bias), and tensor operations.
-        raise NotImplementedError
+        # Compute the output of the linear layer using the input tensor, parameters(the weight and bias), and tensor operations.
+        out = x @ self.weights
+        if self.bias is not None:
+            out += self.bias
+            
+        return out
