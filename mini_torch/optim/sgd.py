@@ -34,7 +34,7 @@ class SGD:
             - Modifies parameter values in-place (updates `p.data`).
             - Does not modify `p.grad`.
         """
-        # TODO: update all managed parameters using gradient descent update rule and the specified learning rate.
+        # update all managed parameters using gradient descent update rule and the specified learning rate.
         for p in self.params:
             if p.grad is not None:
                 p.data -= self.lr * p.grad
@@ -53,6 +53,6 @@ class SGD:
             - Resets each parameter's stored gradient (e.g., sets `p.grad = None`)
               so subsequent backward passes start fresh and do not accumulate.
         """
-        # TODO: clear the gradients of all managed parameters.
+        # clear the gradients of all managed parameters.
         for p in self.params:
             p.zero_grad()

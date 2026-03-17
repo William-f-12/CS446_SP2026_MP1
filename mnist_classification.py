@@ -1,8 +1,9 @@
-import os
-import sys
 import argparse
 import gzip
+import os
 import struct
+import sys
+
 import numpy as np
 
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
@@ -11,14 +12,22 @@ if ROOT not in sys.path:
 
 import mini_torch as torch
 import mini_torch.nn as nn
-from mini_torch.utils.data import TensorDataset, DataLoader
-from mini_torch.optim import SGD
 from mini_torch import Tensor
 from mini_torch.nn import CrossEntropyLoss
+from mini_torch.optim import SGD
+from mini_torch.utils.data import DataLoader, TensorDataset
+
+# import torch
+# import torch.nn as nn
+# from torch import Tensor
+# from torch.nn import CrossEntropyLoss
+# from torch.optim import SGD
+# from torch.utils.data import DataLoader, TensorDataset
 
 # =========================
 # MNIST loader
 # =========================
+
 
 def read_idx_images(gz_path: str) -> np.ndarray:
     with gzip.open(gz_path, "rb") as f:
@@ -28,6 +37,7 @@ def read_idx_images(gz_path: str) -> np.ndarray:
         data = np.frombuffer(f.read(), dtype=np.uint8)
         return data.reshape(n, rows, cols)
 
+
 def read_idx_labels(gz_path: str) -> np.ndarray:
     with gzip.open(gz_path, "rb") as f:
         magic, n = struct.unpack(">II", f.read(8))
@@ -35,6 +45,7 @@ def read_idx_labels(gz_path: str) -> np.ndarray:
             raise ValueError(f"Bad magic for labels: {magic}")
         data = np.frombuffer(f.read(), dtype=np.uint8)
         return data.reshape(n)
+
 
 def load_mnist_local(root="data/mnist"):
     trX = read_idx_images(os.path.join(root, "train-images-idx3-ubyte.gz"))
@@ -48,10 +59,12 @@ def load_mnist_local(root="data/mnist"):
 # Utils
 # =========================
 
+
 def one_hot(y: np.ndarray, num_classes=10) -> np.ndarray:
     out = np.zeros((y.shape[0], num_classes), dtype=np.float32)
     out[np.arange(y.shape[0]), y.astype(np.int64)] = 1.0
     return out
+
 
 def accuracy_from_logits(logits: np.ndarray, y_int: np.ndarray) -> float:
     pred = logits.argmax(axis=1)
@@ -59,18 +72,35 @@ def accuracy_from_logits(logits: np.ndarray, y_int: np.ndarray) -> float:
 
 
 # ============================================================
-# TODO: Neural network (model definition)
+# Neural network (model definition)
 # ============================================================
 class MNISTMLP(nn.Module):
-    #You can pass in any arguments you want to the constructor.
-    def __init__(self,):
+    # You can pass in any arguments you want to the constructor.
+    def __init__(
+        self,
+    ):
         super().__init__()
-        # TODO: define layers
-        raise NotImplementedError
+        # first hidden layer
+        self.linear1 = nn.Linear(784, 512)
+        self.activation1 = nn.ReLU()
+        # second hidden layer
+        self.linear2 = nn.Linear(512, 512)
+        self.activation2 = nn.ReLU()
+        # third hidden layer
+        # self.linear3 = nn.Linear(512, 256)
+        # self.activation3 = nn.ReLU()
+        # output layer
+        self.linear4 = nn.Linear(512, 10)
 
     def forward(self, x: Tensor) -> Tensor:
-        # TODO: implement forward
-        raise NotImplementedError
+        x = self.linear1(x)
+        x = self.activation1(x)
+        x = self.linear2(x)
+        x = self.activation2(x)
+        # x = self.linear3(x)
+        # x = self.activation3(x)
+        x = self.linear4(x)
+        return x
 
 
 def main():
@@ -92,39 +122,47 @@ def main():
     Xtr_t = torch.tensor(Xtr, requires_grad=False)
     ytr_t = torch.tensor(ytr_oh, requires_grad=False)
     train_ds = TensorDataset(Xtr_t, ytr_t)
-    train_dl = DataLoader(train_ds, batch_size=128, shuffle=True)
+    train_dl = DataLoader(train_ds, batch_size=64, shuffle=True)
 
     # ============================================================
-    # TODO: instantiate model / loss / optimizer
+    # instantiate model / loss / optimizer
     # ============================================================
-    raise NotImplementedError
-    # model = ...
+    model = MNISTMLP()
     criterion = CrossEntropyLoss()
-    # opt = ...
+    opt = SGD(model.parameters(), lr=0.003)
 
     Xte_t = torch.tensor(Xte, requires_grad=False)
     yte_t = torch.tensor(yte_oh, requires_grad=False)
 
-    epochs = 10  # you can change this if you want
+    epochs = 30  # you can change this if you want
 
     last_te_acc = 0.0  # will be updated each epoch
 
     # ============================================================
-    # TODO: training loop
+    # training loop
     # ============================================================
     for ep in range(1, epochs + 1):
         for xb, yb in train_dl:
-            raise NotImplementedError
+            loss = criterion(model(xb), yb)
+            opt.zero_grad()
+            loss.backward()
+            opt.step()
 
         te_logits = model(Xte_t).detach().numpy()
         te_acc = accuracy_from_logits(te_logits, yte)
+
+        # if te_acc < last_te_acc:
+        #     opt.lr *= 0.5
+
         last_te_acc = te_acc
 
         shifted = te_logits - np.max(te_logits, axis=1, keepdims=True)
         log_probs = shifted - np.log(np.sum(np.exp(shifted), axis=1, keepdims=True))
         te_loss = -np.mean(np.sum(yte_oh * log_probs, axis=1))
 
-        print(f"Epoch {ep:02d}/{epochs} | test_loss={te_loss:.4f} | test_acc={te_acc:.4f}")
+        print(
+            f"Epoch {ep:02d}/{epochs} | lr={opt.lr:.6f} | test_loss={te_loss:.4f} | test_acc={te_acc:.4f}"
+        )
 
     return last_te_acc
 
