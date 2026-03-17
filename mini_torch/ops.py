@@ -186,7 +186,8 @@ class Pow(Function):
     def backward(ctx, grad_out):
         a, b = ctx.saved_tensors
         ga = grad_out * b * (a ** (b - 1))
-        gb = grad_out * (a**b) * np.log(a)  # add small value to avoid log(0)
+        safe_a = np.where(a > 0, a, 1.0)
+        gb = grad_out * (a**b) * np.log(safe_a)
 
         return Function.reduce_shape(ga, a.shape), Function.reduce_shape(gb, b.shape)
 

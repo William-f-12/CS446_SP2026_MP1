@@ -5,6 +5,8 @@ Example usage:
     >>> loss.backward()  // Compute gradients of the loss with respect to model parameters
     >>> optimizer.step()  // Update model parameters using the computed gradients and the learning rate
 """
+
+
 class SGD:
     """
     Stochastic Gradient Descent (SGD) optimizer.
@@ -32,8 +34,10 @@ class SGD:
             - Modifies parameter values in-place (updates `p.data`).
             - Does not modify `p.grad`.
         """
-        #TODO: update all managed parameters using gradient descent update rule and the specified learning rate.
-        raise NotImplementedError
+        # TODO: update all managed parameters using gradient descent update rule and the specified learning rate.
+        for p in self.params:
+            if p.grad is not None:
+                p.data -= self.lr * p.grad
 
     def zero_grad(self):
         """
@@ -49,5 +53,6 @@ class SGD:
             - Resets each parameter's stored gradient (e.g., sets `p.grad = None`)
               so subsequent backward passes start fresh and do not accumulate.
         """
-        #TODO: clear the gradients of all managed parameters.
-        raise NotImplementedError
+        # TODO: clear the gradients of all managed parameters.
+        for p in self.params:
+            p.zero_grad()
