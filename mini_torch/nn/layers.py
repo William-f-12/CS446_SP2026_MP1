@@ -39,9 +39,11 @@ class Linear(Module):
         """
         super().__init__()
 
-        # define weight parameter as a member of this class instance (E.g., self.weights). It will be used in forward()
+        # He initialization improves stability for ReLU-based networks.
+        weight_scale = np.sqrt(2.0 / float(in_features))
         self.weights = Tensor(
-            np.random.randn(in_features, out_features), requires_grad=True
+            np.random.randn(in_features, out_features).astype(np.float32) * np.float32(weight_scale),
+            requires_grad=True,
         )
 
         # define bias parameter as a member of this class instance (E.g., self.bias) (if bias=True). It will be used in forward()
