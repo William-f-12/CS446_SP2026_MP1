@@ -81,16 +81,16 @@ class MNISTMLP(nn.Module):
     ):
         super().__init__()
         # first hidden layer
-        self.linear1 = nn.Linear(784, 512)
+        self.linear1 = nn.Linear(784, 1024)
         self.activation1 = nn.ReLU()
         # second hidden layer
-        self.linear2 = nn.Linear(512, 512)
+        self.linear2 = nn.Linear(1024, 1024)
         self.activation2 = nn.ReLU()
         # third hidden layer
         # self.linear3 = nn.Linear(512, 256)
         # self.activation3 = nn.ReLU()
         # output layer
-        self.linear4 = nn.Linear(512, 10)
+        self.linear4 = nn.Linear(1024, 10)
 
     def forward(self, x: Tensor) -> Tensor:
         x = self.linear1(x)
@@ -134,7 +134,7 @@ def main():
     Xte_t = torch.tensor(Xte, requires_grad=False)
     yte_t = torch.tensor(yte_oh, requires_grad=False)
 
-    epochs = 30  # you can change this if you want
+    epochs = 20  # you can change this if you want
 
     last_te_acc = 0.0  # will be updated each epoch
 
@@ -150,9 +150,6 @@ def main():
 
         te_logits = model(Xte_t).detach().numpy()
         te_acc = accuracy_from_logits(te_logits, yte)
-
-        # if te_acc < last_te_acc:
-        #     opt.lr *= 0.5
 
         last_te_acc = te_acc
 
