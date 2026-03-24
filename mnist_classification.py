@@ -129,7 +129,7 @@ def main():
     Xte_t = torch.tensor(Xte, requires_grad=False)
     yte_t = torch.tensor(yte_oh, requires_grad=False)
 
-    epochs = 15  # you can change this if you want
+    epochs = 20  # you can change this if you want
 
     last_te_acc = 0.0  # will be updated each epoch
 
@@ -153,7 +153,7 @@ def main():
         te_loss = -np.mean(np.sum(yte_oh * log_probs, axis=1))
 
         print(
-            f"Epoch {ep:02d}/{epochs} | lr={opt.lr:.6f} | test_loss={te_loss:.4f} | test_acc={te_acc:.4f}"
+            f"Epoch {ep:02d}/{epochs} | test_loss={te_loss:.4f} | test_acc={te_acc:.4f}"
         )
 
     return last_te_acc
